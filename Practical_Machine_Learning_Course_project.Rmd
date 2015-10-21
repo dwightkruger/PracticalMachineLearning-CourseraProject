@@ -21,15 +21,15 @@ The goal of this project is to build a prediction model which predicts the manne
 
 ##Background##
 
-One thing that people regularly do is quantify *how much* of a particular activity they do, but they rarely quantify *how well* they do it. In this project, the goal will be to use data from accelerometers on the belt, forearm, arm, and dumbell of 6 participants and predict how well they did the excercise. Training data was obtained from subjects who were asked to perform barbell lifts correctly and incorrectly in 5 different ways. our model will predict which of the 5 classes each subject belongs to. 
+Although people regularly quantify *how much* of a particular activity they do, they rarely quantify *how well* they do it. In this project, the goal will be to use data from accelerometers on the belt, forearm, arm, and dumbell of 6 participants and predict how well they did the excercise. Training data was obtained from subjects who were asked to perform barbell lifts correctly and incorrectly in 5 different ways. Our model will predict which of the 5 classes each subject belongs to. 
 
-More information is available from the website here: http://groupware.les.inf.puc-rio.br/har (see the section on the Weight Lifting Exercise Dataset). A data dictionary can be found at http://groupware.les.inf.puc-rio.br/public/papers/2013.Velloso.QAR-WLE.pdf. Briefly the trainintg set contains a column called *classe* whose values are defined as follows:
+More information is available from the website at: http://groupware.les.inf.puc-rio.br/har (see the section on the Weight Lifting Exercise Dataset). A data dictionary can be found at http://groupware.les.inf.puc-rio.br/public/papers/2013.Velloso.QAR-WLE.pdf. The training set contains a variable called *classe* whose values are defined as follows:
 
-- Class A - Exactly according to specification. 
-- Class B - Throwing the Elbow to the front. 
-- Class C - Lifting the Dumbbell only halfway. 
-- Class D - Lowering the Dumbbell only halfway. 
-- Class E - Throwing the Hips to the front.
+- A - Exactly according to specification. 
+- B - Throwing the Elbow to the front. 
+- C - Lifting the Dumbbell only halfway. 
+- D - Lowering the Dumbbell only halfway. 
+- E - Throwing the Hips to the front.
 
 The training data is from https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv
 
@@ -52,7 +52,7 @@ The test data is from https://d396qusza40orc.cloudfront.net/predmachlearn/pml-te
 
 ##Exploratory Analysis##
 
-Browsing the training data and the data dictionary it is clear that some data will not be useful when building models (subject's name, row identifier, etc.) First we will pre process the training data and remove summary rows as well as all columns for which all data is NA, contain the row identifier, the subject's name, date/time values and window identifiers.
+Browsing the training data and the data dictionary it is clear that some data will not be useful when building models (such as the subject's name, row identifier, etc.). First we will preprocess the training data and remove clealy irrelevant data such as summary rows as well as columns for which all data is NA, contain the row identifier, the subject's name, date/time values and window identifiers.
 
 ```{r}
 # Load the data. 
@@ -73,21 +73,21 @@ testData = read.csv("./data/testData.csv", na.strings=c("", "NA", "NULL"))
 # Remove irrelevant rows and columns. 
 trainingData <- trainingData[trainingData$new_window != "yes",] # Ignore summary rows
 trainingData <- trainingData[,colSums(is.na(trainingData)) < nrow(trainingData)]  # Remove NA columns
-trainingData <- select(trainingData, -X)                      # Select all except X
-trainingData <- select(trainingData, -raw_timestamp_part_1)   # Select all except raw_timestamp_part_1
-trainingData <- select(trainingData, -raw_timestamp_part_2)   # Select all except raw_timestamp_part_2
-trainingData <- select(trainingData, -cvtd_timestamp)         # Select all except cvtd_timestamp
-trainingData <- select(trainingData, -new_window)             # Select all except new_window
-trainingData <- select(trainingData, -num_window)             # Select all except num_window
-trainingData <- select(trainingData, -user_name)              # Select all except user_name
+trainingData <- select(trainingData, -X)                      # Remove X column
+trainingData <- select(trainingData, -raw_timestamp_part_1)   # Remove raw_timestamp_part_1 column
+trainingData <- select(trainingData, -raw_timestamp_part_2)   # Remove raw_timestamp_part_2 column
+trainingData <- select(trainingData, -cvtd_timestamp)         # Remove cvtd_timestamp column
+trainingData <- select(trainingData, -new_window)             # Remove new_window column
+trainingData <- select(trainingData, -num_window)             # Remove num_window column
+trainingData <- select(trainingData, -user_name)              # Remove user_name column
 ```
-Look for variables in the training set which have near zero variance, i.e. those which have basically the same value for all measurements for all subjects. If we find any, we will want to also remove those variables as well from our training set.
+Next, we will to look for variables in the training set which have near zero variance, i.e. those which have basically the same value for all measurements for all subjects. If we find any, we will want to also remove those variables as well from our training set.
 
 ```{r}
 countZeroVar <- nearZeroVar(trainingData)
 if (any(countZeroVar)) 
-  message("Some variables have near zero variance") else 
-  message("None of the variables have a near zero variance") 
+  message("Some variables have near zero variance.") else 
+  message("None of the variables have a near zero variance.") 
 ```
 Split the training data into a training set (75%) and a test set (25%)
 
@@ -96,31 +96,31 @@ inTrain <- createDataPartition(y=trainingData$classe, p=0.75, list=FALSE)
 training <- trainingData[inTrain,]
 testing <- trainingData[-inTrain,]
 ```
-We may have variables which are highly correlated with eachother and hence may lead to overfitting. A visualization of the correlation between each pair of variables is given in figure 1 in the appendix figure 1.
+We may have variables which are highly correlated with each other and hence may lead to overfitting. A visualization of the correlation between each pair of variables is given in figure 1 in the appendix figure 1.
 
-##Build the random forest model##
-Using Principal Component Analysis (PCA) we will choose the most useful predictors and build a random forest.
+##Build the Random Forest model##
+Using Principal Component Analysis (PCA) we will choose the most useful predictors and build a random forest model.
 
 ```{r}
 prComp <- preProcess(training[-53], method="pca", thresh = 0.95)    # PCA to find useful predictors
 trainPC <- predict(prComp, training[-53])
 rfModel <- randomForest(training$classe ~ ., data=trainPC, importance=TRUE) # Build the random forest
 ```
-Run the test dataset through the prediction model and create a confusion matrix to examine how well the random forest predicted the correct outcomes.
+Run the test set through the prediction model and create a confusion matrix to examine how well the random forest predicted the correct outcomes.
 
 ```{r}
 predTestData <- predict(rfModel,  predict(prComp, testing[,-53]))
 cmTestData <- confusionMatrix(testing$classe, predTestData)
 cmTestData$table
 ```
-Calculate the accuracy of our results, by counting the number of times we predicted correctly.
+Calculate the accuracy of our results, by counting the number of times the model correctly predicted *classe*.
 ```{r}
 accuracy <- postResample(testing$classe, predTestData)
 ```
-The random forest model predicted `r round(accuracy[[1]]*100,2)`% of the time correctly.
+The random forest model predicted *classe* `r round(accuracy[[1]]*100,2)`% of the time correctly.
 
-## Predict *classe* of the 20 subjects in the test data## 
-Finally predict the outcome of our 20 test subjects and write the results to disk.
+## Predict *classe* of the subjects in the test data## 
+Finally predict the *classe* of the test subjects using the random forest model.
 ```{r}
 classe_prediction <- predict(rfModel, predict(prComp, testData))
 result <- cbind(testData[2], classe_prediction)
@@ -182,11 +182,11 @@ pml_write_files(classe_prediction)
 
 ## Appendix ##
 
-**Figure 1:** Correlations between pairs of variables in our training set.
+**Figure 1:** Correlations between pairs of variables in the training set.
 
 ```{r echo=FALSE}
 corTable <- cor(training[, -53])
 corrplot(corTable, method = "color", tl.cex = 0.5, tl.col = "black", type = "lower", order = "FPC")
 ```
 
-The darker colors indicate features which are correlated with each other, where blue is a positive correlation and red is a negative correlation. Clearly not all of the variables are necessary since some are highly correlated with eachother.  
+The darker colors indicate features which are correlated with each other, where blue is a positive correlation and red is a negative correlation. Clearly not all of the variables are necessary since some are highly correlated with each other.  
