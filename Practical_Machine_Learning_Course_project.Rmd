@@ -2,7 +2,7 @@
 title: "Practical Machine Learning - Coursera Project"
 author: "Dwight Kruger"
 date: "October 13, 2015"
-output: html_document
+output: pdf_document
 ---
 
 ```{r echo=FALSE, message=F, warning=F}
@@ -52,7 +52,7 @@ The test data is from https://d396qusza40orc.cloudfront.net/predmachlearn/pml-te
 
 ##Exploratory Analysis##
 
-Browsing the training data and the data dictionary it is clear that some data will not be useful when building models (such as the subject's name, row identifier, etc.). First we will preprocess the training data and remove clealy irrelevant data such as summary rows as well as columns for which all data is NA, contain the row identifier, the subject's name, date/time values and window identifiers.
+Browsing the training data and the data dictionary it is clear that some data will not be useful when building models (such as the subject's name, row identifier, etc.). First we will preprocess the training data and remove clealy irrelevant data such as summary rows as well as columns for which all data is NA, the row identifier, the subject's name, date/time values and window identifiers.
 
 ```{r}
 # Load the data. 
