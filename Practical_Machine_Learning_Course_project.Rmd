@@ -2,7 +2,7 @@
 title: "Practical Machine Learning - Coursera Project"
 author: "Dwight Kruger"
 date: "October 13, 2015"
-output: pdf_document
+output: html_document
 ---
 
 ```{r echo=FALSE, message=F, warning=F}
@@ -102,7 +102,7 @@ We may have variables which are highly correlated with each other and hence may 
 Using Principal Component Analysis (PCA) we will choose the most useful predictors and build a random forest model.
 
 ```{r}
-prComp <- preProcess(training[-53], method="pca", thresh = 0.95)    # PCA to find useful predictors
+prComp <- preProcess(training[-53], method="pca", thresh = 0.99)    # PCA to find useful predictors
 trainPC <- predict(prComp, training[-53])
 rfModel <- randomForest(training$classe ~ ., data=trainPC, importance=TRUE) # Build the random forest
 ```
@@ -125,9 +125,10 @@ The random forest model predicted *classe* `r round(classeAccuracy*100,2)`% of t
 Finally predict the *classe* of the test subjects using the random forest model.
 ```{r}
 classe_prediction <- predict(rfModel, predict(prComp, testData))
-result <- cbind(testData[2], classe_prediction)
+result <- cbind(testData[2], classe_prediction) 
 ```
 ```{r echo=FALSE}
+# Code provided by Coursera instructors
 pml_write_files = function(x){
   n = length(x)
   for(i in 1:n){
@@ -136,6 +137,7 @@ pml_write_files = function(x){
   }
 }
 
+# Code provided by http://www.r-statistics.com/2012/01/merging-two-data-frame-objects-while-preserving-the-rows-order/
 merge.with.order <- function(x,y, ..., sort = T, keep_order)
 	{
 		# this function works just like merge, only that it adds the option to return the merged data.frame ordered by x (1) or by y (2)
