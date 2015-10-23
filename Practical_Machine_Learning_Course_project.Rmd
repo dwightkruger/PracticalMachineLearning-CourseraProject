@@ -106,18 +106,20 @@ prComp <- preProcess(training[-53], method="pca", thresh = 0.95)    # PCA to fin
 trainPC <- predict(prComp, training[-53])
 rfModel <- randomForest(training$classe ~ ., data=trainPC, importance=TRUE) # Build the random forest
 ```
-Run the test set through the prediction model and create a confusion matrix to examine how well the random forest predicted the correct outcomes.
+Run the test set through the prediction model and create a confusion matrix to examine how well the random forest predicted the correct outcomes. This will dermine the cross-validation error.
 
 ```{r}
 predTestData <- predict(rfModel,  predict(prComp, testing[,-53]))
 cmTestData <- confusionMatrix(testing$classe, predTestData)
 cmTestData$table
 ```
-Calculate the accuracy of our results, by counting the number of times the model correctly predicted *classe*.
+Calculate the accuracy of our results, by counting the number of times the model correctly predicted *classe* (accuracy), and the out of sample error. I would be satistifed with a out of sample error of 5% or less.
 ```{r}
-accuracy <- postResample(testing$classe, predTestData)
+accuracy <- cmTestData$overall[1]
+classeAccuracy <- accuracy[[1]]
+outOfSampleError <- 1 - classeAccuracy
 ```
-The random forest model predicted *classe* `r round(accuracy[[1]]*100,2)`% of the time correctly.
+The random forest model predicted *classe* `r round(classeAccuracy*100,2)`% of the time correctly (accuracy) and the out of sample error is 1-accuracy = `r round(outOfSampleError*100,2)`%
 
 ## Predict *classe* of the subjects in the test data## 
 Finally predict the *classe* of the test subjects using the random forest model.
